@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于我 · 数码派</title>
+  <meta name="description" content="关于数码派站长：一个数码爱好者的自我介绍与联系方式。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='white'%3E%E6%95%B0%3C/text%3E%3C/svg%3E">
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      var theme = saved ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ======================== 顶部导航栏（全站统一） ======================== -->
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a class="logo" href="index.html">
+        <span class="logo-mark">数</span>
+        <span id="siteName">数码派</span>
+      </a>
+
+      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单">☰</button>
+
+      <nav class="nav-menu" id="navMenu">
+        <a class="nav-link" href="index.html">首页</a>
+        <a class="nav-link" href="articles.html">文章</a>
+        <a class="nav-link" href="devices.html">设备清单</a>
+        <a class="nav-link active" href="about.html">关于我</a>
+        <a class="nav-link" href="submit.html">投稿/反馈</a>
+
+        <div class="nav-search">
+          <input type="search" id="navSearchInput" placeholder="搜索文章…" aria-label="搜索文章">
+          <button class="nav-search-btn" id="navSearchBtn">搜索</button>
+        </div>
+      </nav>
+
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换深色模式">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 个人信息头图 -->
+    <section class="about-hero">
+      <img class="avatar" id="aboutAvatar" src="" alt="头像">
+      <div>
+        <h1 id="aboutName"></h1>
+        <p class="slogan" id="aboutSlogan"></p>
+      </div>
+    </section>
+
+    <!-- 站点数据统计 -->
+    <section class="about-stats">
+      <div class="stat-card">
+        <div class="num" id="statArticles">0</div>
+        <div class="label">篇原创文章</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statDevices">0</div>
+        <div class="label">件在用设备</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="statSince">0</div>
+        <div class="label">年建站至今</div>
+      </div>
+    </section>
+
+    <!-- 自我介绍 -->
+    <section class="about-block">
+      <h2>关于我</h2>
+      <div id="aboutBio"></div>
+    </section>
+
+    <!-- 关注话题（标签自动取自文章数据） -->
+    <section class="about-block">
+      <h2>我常写的话题</h2>
+      <div class="topic-tags" id="aboutTopics"></div>
+    </section>
+
+    <!-- 关于本站 -->
+    <section class="about-block">
+      <h2>关于本站</h2>
+      <p>这是一个纯静态的个人网站，使用最基础的 HTML + CSS + JavaScript 手工编写，没有登录注册，没有评论区，也没有任何广告和追踪脚本。</p>
+      <p>所有内容均为个人真实使用感受，与任何厂商无关。文章欢迎通过邮件或社交平台链接形式分享，转载请注明出处。</p>
+    </section>
+
+    <!-- 联系方式（邮箱 / GitHub / 微博，在 js/data.js 里修改） -->
+    <section class="about-block">
+      <h2>联系我</h2>
+      <ul class="contact-list" id="contactList"></ul>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="index.html"><span class="logo-mark">数</span><span class="footer-site-name">数码派</span></a>
+          <p>记录真实的数码生活。没有厂商通稿，没有云评测，只有用了之后的真心话。</p>
+        </div>
+        <div class="footer-col">
+          <h4>内容</h4>
+          <a href="articles.html">全部文章</a>
+          <a href="devices.html">设备清单</a>
+          <a href="about.html">关于我</a>
+        </div>
+        <div class="footer-col">
+          <h4>互动</h4>
+          <a href="submit.html">投稿</a>
+          <a href="submit.html">意见反馈</a>
+          <a href="mailto:aze@example.com">联系站长</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footerYear"></span> <span class="footer-site-name">数码派</span> · 记录真实的数码生活</p>
+        <p>使用 HTML + CSS + JavaScript 手工打造 · 无广告 · 纯静态</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    /* 关于我页面的小脚本：把 data.js 中的个人信息填进页面 */
+    document.addEventListener('DOMContentLoaded', function () {
+      // 头像、名字、副标题
+      $('aboutAvatar').src = SITE.avatar;
+      $('aboutAvatar').onerror = function () { this.onerror = null; this.src = imgFallback('头像'); };
+      $('aboutName').textContent = SITE.author;
+      $('aboutSlogan').textContent = SITE.slogan;
+
+      // 统计数字
+      $('statArticles').textContent = ARTICLES.length;
+      $('statDevices').textContent = DEVICES.length;
+      $('statSince').textContent = SITE.since;
+
+      // 自我介绍段落
+      $('aboutBio').innerHTML = SITE.bio.map(function (p) {
+        return '<p>' + escapeHtml(p) + '</p>';
+      }).join('');
+
+      // 话题标签：自动汇总文章里出现过的所有标签
+      var tagSet = {};
+      ARTICLES.forEach(function (a) {
+        a.tags.forEach(function (t) { tagSet[t] = true; });
+      });
+      $('aboutTopics').innerHTML = Object.keys(tagSet).map(function (t) {
+        return '<a class="tag" href="articles.html?tag=' + encodeURIComponent(t) + '">'
+          + escapeHtml(t) + '</a>';
+      }).join('');
+
+      // 联系方式：值为空的渠道自动不显示
+      var contacts = [];
+      if (SITE.email)  contacts.push({ icon: '📧', label: '邮箱', value: SITE.email,  href: 'mailto:' + SITE.email });
+      if (SITE.github) contacts.push({ icon: '🐙', label: 'GitHub', value: SITE.github, href: SITE.github });
+      if (SITE.weibo)  contacts.push({ icon: '🌐', label: '微博', value: SITE.weibo,  href: SITE.weibo });
+      $('contactList').innerHTML = contacts.map(function (c) {
+        return '<li><span class="ci">' + c.icon + '</span>'
+          + '<span class="muted">' + c.label + '：</span>'
+          + '<a href="' + c.href + '" target="_blank" rel="noopener">' + escapeHtml(c.value) + '</a></li>';
+      }).join('');
+    });
+  </script>
+</body>
+</html>
