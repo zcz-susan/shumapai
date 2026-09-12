@@ -47,10 +47,10 @@
       <p>分享你的数码体验，或者告诉我哪里做得不够好。</p>
     </div>
 
-    <div class="submit-wrap">
+    <div class="submit-wrap" id="submitTop">
 
       <!-- 标签切换：投稿 / 提意见 -->
-      <div class="submit-tabs">
+      <div class="submit-tabs" id="submitTabs">
         <div class="submit-tab active" data-tab="submit">✍️ 投稿</div>
         <div class="submit-tab" data-tab="feedback">💡 提意见</div>
       </div>
@@ -136,10 +136,23 @@
         <div class="icon">✅</div>
         <h3 id="successTitle">提交成功！</h3>
         <p id="successMsg">感谢你的投稿，我会尽快阅读并通过邮件与你联系。</p>
-        <a class="btn btn-primary" href="index.html">返回首页</a>
+        <div class="success-actions">
+          <a class="btn btn-primary" href="#wallSection" id="viewWallBtn">看看大家的投稿</a>
+          <button type="button" class="btn" id="writeAgainBtn">再写一篇</button>
+        </div>
       </div>
 
     </div>
+
+    <!-- ======================== 大家的投稿（社区墙） ======================== -->
+    <section class="wall-section" id="wallSection">
+      <div class="section-head">
+        <h2>大家的投稿</h2>
+        <a class="more-link" href="#submitTop">我也要投一篇 ↑</a>
+      </div>
+      <p class="wall-sub">这里展示社区小伙伴的真实数码体验摘录。你提交的投稿会立刻出现在墙上（内容保存在本机浏览器中）。</p>
+      <div class="wall-grid" id="communityWall"><!-- submit.js 渲染 --></div>
+    </section>
   </main>
 
   <footer class="site-footer">
