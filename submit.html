@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投稿与反馈 · 数码派</title>
+  <meta name="description" content="向数码派投稿你的数码体验文章，或提出意见与建议。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='white'%3E%E6%95%B0%3C/text%3E%3C/svg%3E">
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      var theme = saved ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a class="logo" href="index.html">
+        <span class="logo-mark">数</span>
+        <span id="siteName">数码派</span>
+      </a>
+      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单">☰</button>
+      <nav class="nav-menu" id="navMenu">
+        <a class="nav-link" href="index.html">首页</a>
+        <a class="nav-link" href="articles.html">文章</a>
+        <a class="nav-link" href="devices.html">设备清单</a>
+        <a class="nav-link" href="about.html">关于我</a>
+        <a class="nav-link active" href="submit.html">投稿/反馈</a>
+        <div class="nav-search">
+          <input type="search" id="navSearchInput" placeholder="搜索文章…" aria-label="搜索文章">
+          <button class="nav-search-btn" id="navSearchBtn">搜索</button>
+        </div>
+      </nav>
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换深色模式">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-head">
+      <h1>投稿与反馈</h1>
+      <p>分享你的数码体验，或者告诉我哪里做得不够好。</p>
+    </div>
+
+    <div class="submit-wrap">
+
+      <!-- 标签切换：投稿 / 提意见 -->
+      <div class="submit-tabs">
+        <div class="submit-tab active" data-tab="submit">✍️ 投稿</div>
+        <div class="submit-tab" data-tab="feedback">💡 提意见</div>
+      </div>
+
+      <!-- 投稿表单 -->
+      <form class="submit-form active" id="form-submit">
+        <div class="info-card">
+          <strong>投稿须知：</strong>本站为个人博客，欢迎原创数码体验类文章（手机、笔电、耳机、相机等使用心得）。
+          请填写标题和正文，我会在收到后阅读并通过邮件与你联系。请勿发布广告或抄袭内容。
+        </div>
+
+        <div class="form-group">
+          <label>你的昵称 <span class="req">*</span></label>
+          <input type="text" name="author" required placeholder="怎么称呼你？">
+        </div>
+
+        <div class="form-group">
+          <label>联系邮箱 <span class="req">*</span></label>
+          <input type="email" name="email" required placeholder="方便我回复你">
+        </div>
+
+        <div class="form-group">
+          <label>文章分类</label>
+          <select name="category">
+            <option>手机</option><option>笔记本</option><option>耳机</option>
+            <option>平板</option><option>相机</option><option>外设</option>
+            <option>配件</option><option>其他数码</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>文章标题 <span class="req">*</span></label>
+          <input type="text" name="title" required placeholder="给你的文章起个标题">
+        </div>
+
+        <div class="form-group">
+          <label>正文内容 <span class="req">*</span></label>
+          <textarea name="content" required placeholder="写下你的真实使用体验……支持分段，可以先在别处写好再粘贴。"></textarea>
+          <div class="hint">建议 500 字以上，有真实体验细节更容易被收录。</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:46px">提交投稿</button>
+      </form>
+
+      <!-- 意见反馈表单 -->
+      <form class="submit-form" id="form-feedback">
+        <div class="info-card">
+          <strong>反馈说明：</strong>如果你在浏览过程中发现了 bug、排版问题，或者有功能建议、内容选题想法，
+          都欢迎在这里告诉我。每一条反馈我都会认真看。
+        </div>
+
+        <div class="form-group">
+          <label>反馈类型</label>
+          <select name="type">
+            <option>功能建议</option>
+            <option>内容选题</option>
+            <option>排版/显示问题</option>
+            <option>Bug 反馈</option>
+            <option>其他</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>你的昵称</label>
+          <input type="text" name="author" placeholder="可选，匿名也可以">
+        </div>
+
+        <div class="form-group">
+          <label>联系邮箱</label>
+          <input type="email" name="email" placeholder="可选，方便我回复">
+        </div>
+
+        <div class="form-group">
+          <label>反馈内容 <span class="req">*</span></label>
+          <textarea name="content" required placeholder="具体说说你的想法或问题……"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:46px">提交反馈</button>
+      </form>
+
+      <!-- 提交成功提示 -->
+      <div class="submit-success" id="submitSuccess">
+        <div class="icon">✅</div>
+        <h3 id="successTitle">提交成功！</h3>
+        <p id="successMsg">感谢你的投稿，我会尽快阅读并通过邮件与你联系。</p>
+        <a class="btn btn-primary" href="index.html">返回首页</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="index.html"><span class="logo-mark">数</span><span class="footer-site-name">数码派</span></a>
+          <p>记录真实的数码生活。没有厂商通稿，没有云评测，只有用了之后的真心话。</p>
+        </div>
+        <div class="footer-col">
+          <h4>内容</h4>
+          <a href="articles.html">全部文章</a>
+          <a href="devices.html">设备清单</a>
+          <a href="about.html">关于我</a>
+        </div>
+        <div class="footer-col">
+          <h4>互动</h4>
+          <a href="submit.html">投稿</a>
+          <a href="submit.html">意见反馈</a>
+          <a href="mailto:aze@example.com">联系站长</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footerYear"></span> <span class="footer-site-name">数码派</span> · 记录真实的数码生活</p>
+        <p>使用 HTML + CSS + JavaScript 手工打造 · 无广告 · 纯静态</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/submit.js"></script>
+</body>
+</html>
