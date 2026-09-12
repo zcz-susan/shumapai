@@ -52,25 +52,25 @@ const SITE = {
 /* -------------------------- 2. 首页轮播大图 -------------------------- */
 const CAROUSEL = [
   {
-    title: '小米 18 Fold 发布两天，吵翻了：万元「中折叠」凭什么',
-    desc: '撞名华为阔折叠、一万一的起步价、The Verge 点名折痕，我们把争议一条条捋清楚',
-    tag: '折叠屏',
-    image: img('photo-1592813630413-1124aa567638', 'landscape_16_9'),
-    link: 'article.html?id=16'
-  },
-  {
     title: '华为 Mate XT 2 非凡大师开售秒没：19999 起的三折叠强在哪',
     desc: '麒麟 9050 Pro、IP58/59、红枫三代影像，首发即售罄，黄牛加价两千五',
     tag: '折叠屏',
-    image: img('photo-1628744404730-5e143358539b', 'landscape_16_9'),
+    image: 'images/huawei-xt2-1.jpg',
     link: 'article.html?id=14'
   },
   {
     title: '苹果首款折叠屏 iPhone Duo 发布：15999 起，顶配 26499',
     desc: '横向书本式内折、7.6 英寸内屏、10 月 23 日发售，苹果史上最贵手机登场',
     tag: '折叠屏',
-    image: img('photo-1523206489230-c012c64b2b48', 'landscape_16_9'),
+    image: 'images/iphone-duo-1.jpg',
     link: 'article.html?id=15'
+  },
+  {
+    title: '小米 18 Fold 发布两天，吵翻了：万元「中折叠」凭什么',
+    desc: '撞名华为阔折叠、一万一的起步价、The Verge 点名折痕，我们把争议一条条捋清楚',
+    tag: '折叠屏',
+    image: 'images/xiaomi-18-fold.jpg',
+    link: 'article.html?id=16'
   }
 ];
 
@@ -81,7 +81,7 @@ const ARTICLES = [
     id: 14,
     title: '华为 Mate XT 2 非凡大师开售秒没：19999 起的三折叠强在哪',
     excerpt: '麒麟 9050 Pro、三折叠首次 IP58/59、第三代红枫影像……9 月 12 日首发即售罄，闲鱼加价两千五。一文梳理发布会全部重点。',
-    cover: img('photo-1628744404730-5e143358539b', 'landscape_16_9'),
+    cover: 'images/huawei-xt2-1.jpg',
     tags: ['折叠屏', '手机'],
     date: '2026-09-12',
     hot: true,
@@ -102,7 +102,9 @@ const ARTICLES = [
 
 19999 元起步（16+256GB），顶配 16+1TB 灵盾防窥屏版 24999 元。余承东在发布会上回应价格：今年存储等元器件成本涨了两千多，但首发价还是和上代持平，"这个定价是有诚意的"。
 
-![手里展开的折叠屏手机，蝴蝶壁纸占满整块大屏](${img('photo-1568378711447-f5eef04d85b5', 'landscape_4_3')})
+![华为 Mate XT 2 非凡大师，展翼三折叠正面展示](images/huawei-xt2-1.jpg)
+
+![华为 Mate XT 2 非凡大师，折叠状态下的整机造型](images/huawei-xt2-2.jpg)
 
 ## 形态：展翼三折，10.2 英寸揣进口袋
 
@@ -135,7 +137,7 @@ const ARTICLES = [
     id: 15,
     title: '苹果首款折叠屏 iPhone Duo 发布：15999 起，顶配 26499',
     excerpt: '横向书本式内折、外屏约 5.4 英寸、展开 7.6 英寸接近 iPad mini。10 月 23 日发售，苹果第一次做折叠，就卖出了史上最高价。',
-    cover: img('photo-1523206489230-c012c64b2b48', 'landscape_16_9'),
+    cover: 'images/iphone-duo-1.jpg',
     tags: ['折叠屏', '手机'],
     date: '2026-09-10',
     hot: true,
@@ -156,7 +158,9 @@ const ARTICLES = [
 
 Duo 采用横向书本式内折方案：闭合时外屏约 5.4 英寸，展开后内屏约 7.6 英寸，显示面积接近 iPad mini。这是三家里最"保守"的形态——没有三折叠，也没有阔比例，苹果选择了技术成熟度最高的方案。
 
-![桌上黑色手机与浅色背景，屏幕未点亮](${img('photo-1585060544812-6b45742d762f', 'landscape_4_3')})
+![iPhone Duo 官方宣传图，展开状态下的内屏体验](images/iphone-duo-1.jpg)
+
+![iPhone Duo 三款配色展示，可折叠设计](images/iphone-duo-2.jpg)
 
 ## 价格：苹果史上最贵
 
@@ -177,7 +181,7 @@ Duo 采用横向书本式内折方案：闭合时外屏约 5.4 英寸，展开�
     id: 16,
     title: '小米 18 Fold 发布两天，吵翻了：万元「中折叠」凭什么',
     excerpt: '5.38+7.58 英寸、219 克、6000mAh、徕卡潜望长焦、玄戒 O3，10999 起。配置给足的同时，撞名华为、万元定价、折痕争议也一起上了热搜。',
-    cover: img('photo-1592813630413-1124aa567638', 'landscape_16_9'),
+    cover: 'images/xiaomi-18-fold.jpg',
     tags: ['折叠屏', '手机'],
     date: '2026-09-09',
     hot: true,
