@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全部文章 · 数码派</title>
+  <meta name="description" content="数码派全部文章：手机、笔记本、耳机、平板、相机等数码体验与选购指南。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='white'%3E%E6%95%B0%3C/text%3E%3C/svg%3E">
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      var theme = saved ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ======================== 顶部导航栏（全站统一） ======================== -->
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a class="logo" href="index.html">
+        <span class="logo-mark">数</span>
+        <span id="siteName">数码派</span>
+      </a>
+
+      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单">☰</button>
+
+      <nav class="nav-menu" id="navMenu">
+        <a class="nav-link" href="index.html">首页</a>
+        <a class="nav-link active" href="articles.html">文章</a>
+        <a class="nav-link" href="devices.html">设备清单</a>
+        <a class="nav-link" href="about.html">关于我</a>
+        <a class="nav-link" href="submit.html">投稿/反馈</a>
+
+        <div class="nav-search">
+          <input type="search" id="navSearchInput" placeholder="搜索文章…" aria-label="搜索文章">
+          <button class="nav-search-btn" id="navSearchBtn">搜索</button>
+        </div>
+      </nav>
+
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换深色模式">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 页面标题 -->
+    <div class="page-head">
+      <h1>全部文章</h1>
+      <p>真实使用，长期体验。按标签筛选或直接搜索感兴趣的内容。</p>
+    </div>
+
+    <div class="list-toolbar">
+      <!-- 标签筛选条：由 articles.js 根据文章数据自动生成 -->
+      <div class="filter-chips" id="filterChips"></div>
+
+      <!-- 搜索框 + 结果数量 -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="listSearch" placeholder="搜索标题、标签或内容…" aria-label="搜索文章">
+        </div>
+        <span class="result-count" id="resultCount"></span>
+      </div>
+    </div>
+
+    <!-- 文章卡片网格 -->
+    <div class="card-grid" id="articleGrid"></div>
+
+    <!-- 无搜索结果时显示 -->
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-icon">🔍</div>
+      <p>没有找到匹配的文章，换个关键词或标签试试吧。</p>
+    </div>
+
+    <!-- 分页按钮 -->
+    <div class="pagination" id="pagination"></div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="index.html"><span class="logo-mark">数</span><span class="footer-site-name">数码派</span></a>
+          <p>记录真实的数码生活。没有厂商通稿，没有云评测，只有用了之后的真心话。</p>
+        </div>
+        <div class="footer-col">
+          <h4>内容</h4>
+          <a href="articles.html">全部文章</a>
+          <a href="devices.html">设备清单</a>
+          <a href="about.html">关于我</a>
+        </div>
+        <div class="footer-col">
+          <h4>互动</h4>
+          <a href="submit.html">投稿</a>
+          <a href="submit.html">意见反馈</a>
+          <a href="mailto:aze@example.com">联系站长</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footerYear"></span> <span class="footer-site-name">数码派</span> · 记录真实的数码生活</p>
+        <p>使用 HTML + CSS + JavaScript 手工打造 · 无广告 · 纯静态</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/articles.js"></script>
+</body>
+</html>
