@@ -234,10 +234,27 @@
   }
   renderComments();
 
-  // 回填上次用过的昵称
+  // 回填昵称：已登录用户用账号昵称（只读），未登录回填上次用过的昵称
   var nameInput = $('commentName');
-  var lastName = storageRead('dp_name', '');
-  if (lastName) nameInput.value = lastName;
+  function applyAuthName() {
+    var session = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+    var nick = session && session.user ? session.user.nickname : '';
+    if (nick) {
+      // 登录态：昵称优先于 dp_name，输入框锁定不可改
+      nameInput.value = nick;
+      nameInput.readOnly = true;
+      nameInput.placeholder = '已登录：' + nick;
+    } else {
+      // 未登录：维持原有 dp_name 逻辑
+      nameInput.readOnly = false;
+      nameInput.placeholder = '你的昵称（选填，默认：热心网友）';
+      var lastName = storageRead('dp_name', '');
+      nameInput.value = lastName || '';
+    }
+  }
+  applyAuthName();
+  // 弹窗里登录 / 退出后，common.js 会广播 dp_auth_change，这里同步刷新
+  document.addEventListener('dp_auth_change', applyAuthName);
 
   $('commentForm').addEventListener('submit', function (e) {
     e.preventDefault();
