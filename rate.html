@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手机评分榜 · 数码派</title>
+  <meta name="description" content="数码派手机评分榜：性能、屏幕、影像、续航、性价比五维真实口碑评分，仅供参考。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2335618f'/%3E%3Cpath d='M5 16h5l3-7 3 14 3-11 2 4h6' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- 深色模式启动脚本：必须放在样式之前，避免刷新时先闪一下白底 -->
+  <script>
+    (function () {
+      var saved = null;
+      try { saved = localStorage.getItem('theme'); } catch (e) {}
+      var theme = saved || 'dark'; // 默认深色深空风格，可点右上角图标切换回浅色
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Google Analytics 访问统计：免费，可看实时在线、城市、设备、来源（衡量ID：G-126PKG1057） -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-126PKG1057"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-126PKG1057');
+  </script>
+</head>
+<body>
+
+  <!-- ======================== 顶部导航栏（全站统一） ======================== -->
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a class="logo" href="index.html">
+        <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2.5-6L13 17.5l2.5-8L17.5 12H21" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span id="siteName">数码派</span>
+      </a>
+
+      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单">☰</button>
+
+      <nav class="nav-menu" id="navMenu">
+        <a class="nav-link" href="index.html">首页</a>
+        <a class="nav-link" href="articles.html">文章</a>
+        <a class="nav-link" href="hot.html">热榜</a>
+        <a class="nav-link active" href="rate.html">评分</a>
+        <a class="nav-link" href="devices.html">设备清单</a>
+        <a class="nav-link" href="about.html">关于我</a>
+        <a class="nav-link" href="submit.html">投稿/反馈</a>
+      </nav>
+
+      <!-- 搜索框：独立在折叠菜单外，手机上无需展开菜单也能直接搜索 -->
+      <div class="nav-search">
+        <input type="search" id="navSearchInput" placeholder="搜索文章…" aria-label="搜索文章">
+        <button class="nav-search-btn" id="navSearchBtn">搜索</button>
+      </div>
+
+      <!-- 深色 / 浅色模式切换 -->
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换深色模式">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 页面标题 -->
+    <div class="page-head">
+      <h1>手机评分榜 · 五维真实口碑评分</h1>
+      <p>评分为编辑综合口碑整理，仅供参考。点击表头可按任意维度重新排序。</p>
+    </div>
+
+    <!-- ======================== 上半部分：排行榜表格 ======================== -->
+    <!-- 容器带横向滚动，手机上也能看全九列 -->
+    <div class="rate-table-wrap">
+      <table class="rate-table" id="rateTable">
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>机型</th>
+            <th>价格</th>
+            <!-- 带data-key的表头可点击排序，data-label存原始文字供渲染箭头用 -->
+            <th class="sortable" data-key="perf" data-label="性能">性能</th>
+            <th class="sortable" data-key="screen" data-label="屏幕">屏幕</th>
+            <th class="sortable" data-key="camera" data-label="影像">影像</th>
+            <th class="sortable" data-key="battery" data-label="续航">续航</th>
+            <th class="sortable" data-key="value" data-label="性价比">性价比</th>
+            <th class="sortable" data-key="total" data-label="总分">总分</th>
+          </tr>
+        </thead>
+        <tbody id="rateTableBody"><!-- rate.js 渲染 --></tbody>
+      </table>
+    </div>
+
+    <!-- ======================== 下半部分：逐机点评卡片 ======================== -->
+    <section class="section">
+      <div class="section-head">
+        <h2>逐机点评</h2>
+      </div>
+      <div class="rate-cards" id="rateCards"><!-- rate.js 渲染 --></div>
+    </section>
+
+  </main>
+
+  <!-- ============================== 页脚 ============================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2.5-6L13 17.5l2.5-8L17.5 12H21" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="footer-site-name">数码派</span></a>
+          <p>记录真实的数码生活。没有厂商通稿，没有云评测，只有用了之后的真心话。</p>
+        </div>
+        <div class="footer-col">
+          <h4>内容</h4>
+          <a href="articles.html">全部文章</a>
+          <a href="devices.html">设备清单</a>
+          <a href="about.html">关于我</a>
+        </div>
+        <div class="footer-col">
+          <h4>互动</h4>
+          <a href="submit.html">投稿</a>
+          <a href="submit.html">意见反馈</a>
+          <a href="mailto:aze@example.com">联系站长</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="footerYear"></span> <span class="footer-site-name">数码派</span> · 记录真实的数码生活</p>
+        <p>使用 HTML + CSS + JavaScript 手工打造 · 无广告 · 纯静态</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 顺序：先加载数据，再加载公共脚本，最后加载本页脚本 -->
+  <script src="js/data.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/rate.js"></script>
+</body>
+</html>
