@@ -15,6 +15,38 @@ document.addEventListener('DOMContentLoaded', function () {
     feedback: $('form-feedback')
   };
 
+  /* ---------------- 登录用户自动填写署名 ---------------- */
+  // 登录后昵称优先于 dp_name：投稿与反馈的「署名」框自动填账号昵称并设为只读
+  var authorInputs = [
+    forms.submit.querySelector('input[name="author"]'),
+    forms.feedback.querySelector('input[name="author"]')
+  ];
+  function applyAuthAuthor() {
+    var session = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+    var nick = session && session.user ? session.user.nickname : '';
+    authorInputs.forEach(function (input, i) {
+      if (!input) return;
+      if (nick) {
+        // 同时写入 defaultValue：这样「再写一篇」触发表单 reset() 后昵称仍保留
+        input.value = nick;
+        input.defaultValue = nick;
+        input.readOnly = true;
+        input.placeholder = '已登录：' + nick;
+      } else {
+        // 未登录：还原为可编辑，回填上次用过的昵称（原有 dp_name 逻辑）
+        input.readOnly = false;
+        input.defaultValue = '';
+        input.placeholder = i === 0 ? '怎么称呼你？' : '可选，匿名也可以';
+        var lastName = storageRead('dp_name', '');
+        input.value = lastName || '';
+        input.defaultValue = lastName || '';
+      }
+    });
+  }
+  applyAuthAuthor();
+  // 弹窗里登录 / 退出后，common.js 会广播 dp_auth_change，这里同步刷新
+  document.addEventListener('dp_auth_change', applyAuthAuthor);
+
   /* ------------------------- 社区投稿墙 ------------------------- */
   // 内置社区示例（data.js 的 COMMUNITY_POSTS）
   function getBuiltinPosts() {
