@@ -890,3 +890,87 @@ const DEVICES = [
     image: img('photo-1527443224154-c4a3942d3acf', 'square')
   }
 ];
+
+/* --------------------------- 6. 手机评分数据 --------------------------- */
+/* rate.html「手机评分榜」页面使用。
+   想加新手机：往 PHONES 数组里追加一条即可，字段说明：
+     id      唯一标识（不重复就行）
+     name    机型名称
+     price   价格文案（如 '19999 起'）
+     scores  五维评分，均为 0-10 分、保留一位小数：
+               perf 性能 / screen 屏幕 / camera 影像 / battery 续航 / value 性价比
+     comment 一句话点评
+   总分 = 五维平均分，由 rate.js 实时计算，不用手写。
+   评分口径：按 2026 年 9 月在售机型的真实口碑档位整理，与站内文章内容呼应。 */
+const PHONES = [
+  {
+    id: 'huawei-mate-xt-2',
+    name: '华为 Mate XT 2 非凡大师',
+    price: '19999 起',
+    scores: { perf: 9.2, screen: 9.8, camera: 9.5, battery: 8.9, value: 6.6 },
+    comment: '三折叠形态与 10.2 英寸大屏独一档，屏幕影像双顶尖，价格也独一档。'
+  },
+  {
+    id: 'iphone-duo',
+    name: '苹果 iPhone Duo',
+    price: '15999 起',
+    scores: { perf: 9.3, screen: 9.5, camera: 9.2, battery: 8.2, value: 6.4 },
+    comment: '苹果第一次做折叠，铰链与折痕控制够稳，但初代产品建议再等等。'
+  },
+  {
+    id: 'xiaomi-18-fold',
+    name: '小米 18 Fold',
+    price: '10999 起',
+    scores: { perf: 9.0, screen: 9.3, camera: 9.0, battery: 9.5, value: 8.0 },
+    comment: '6000mAh 加徕卡潜望长焦，万元折叠里堆料最狠，折痕与品控待时间验证。'
+  },
+  {
+    id: 'huawei-pura-x-max',
+    name: '华为 Pura X Max',
+    price: '11999 起',
+    scores: { perf: 8.8, screen: 9.4, camera: 9.3, battery: 8.8, value: 6.9 },
+    comment: '阔折叠形态比三折叠更日常，影像向 Mate XT 看齐。'
+  },
+  {
+    id: 'iphone-18-pro-max',
+    name: '苹果 iPhone 18 Pro Max',
+    price: '10999 起',
+    scores: { perf: 9.6, screen: 9.6, camera: 9.6, battery: 9.3, value: 7.2 },
+    comment: '水桶机皇，影像续航双在线，价格依旧硬挺。'
+  },
+  {
+    id: 'iphone-18-pro',
+    name: '苹果 iPhone 18 Pro',
+    price: '9999 起',
+    scores: { perf: 9.5, screen: 9.4, camera: 9.4, battery: 9.0, value: 7.4 },
+    comment: '对大多数人来说标准 Pro 已经足够，控制键用了回不去。'
+  },
+  {
+    id: 'galaxy-s26-ultra',
+    name: '三星 Galaxy S26 Ultra',
+    price: '10999 起',
+    scores: { perf: 9.4, screen: 9.7, camera: 9.5, battery: 9.0, value: 7.8 },
+    comment: '安卓机皇底子还在，顶级屏幕与手写笔仍是独门绝技。'
+  },
+  {
+    id: 'vivo-x300-pro',
+    name: 'vivo X300 Pro',
+    price: '5299 起',
+    scores: { perf: 9.3, screen: 9.3, camera: 9.8, battery: 9.5, value: 8.6 },
+    comment: '影像与续航双天花板，五千档最全能的水桶旗舰。'
+  },
+  {
+    id: 'oppo-find-x9-pro',
+    name: 'OPPO Find X9 Pro',
+    price: '5499 起',
+    scores: { perf: 9.3, screen: 9.2, camera: 9.6, battery: 9.6, value: 8.5 },
+    comment: '哈苏影像配超大电池，均衡得挑不出明显短板。'
+  },
+  {
+    id: 'honor-magic8-pro',
+    name: '荣耀 Magic8 Pro',
+    price: '5999 起',
+    scores: { perf: 9.4, screen: 9.3, camera: 9.4, battery: 9.2, value: 8.3 },
+    comment: 'AI 与续航是长板，影像稳中有进，综合完成度高。'
+  }
+];
