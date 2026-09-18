@@ -6,6 +6,10 @@
    依赖：data.js（需在本文件之前引入）
    ========================================================================== */
 
+/* 尽早给 html 打上 js 标记：滚动渐入等增强样式只在 html.js 下生效，
+   脚本被禁用或加载失败时 CSS 不会隐藏任何内容 */
+document.documentElement.classList.add('js');
+
 /* ------------------------- 一、通用小工具函数 ------------------------- */
 
 /* 按 id 获取元素，写起来短一点 */
@@ -214,6 +218,445 @@ function cloudAddSubmission(d) {
   }).then(function (r) { return r.status === 201; });
 }
 
+/* ==========================================================================
+   云账号（Supabase Auth：邮箱 + 密码 登录 / 注册）
+   --------------------------------------------------------------------------
+   直接用 fetch 调 Supabase Auth REST API，不引入任何 SDK。
+   注意：这里不复用 cloudRequest()——它把 Authorization 写死为 anonKey，
+   而 Auth 请求需要携带真正的用户 access_token，因此单独封装 authRequest()。
+   会话保存在 localStorage（键 dp_auth），结构：
+   { access_token, refresh_token, expires_at(秒级时间戳),
+     user: { id, email, nickname } }
+   ========================================================================== */
+
+/* 读取本地会话；结构不完整一律视为未登录 */
+function getAuthSession() {
+  var s = storageRead('dp_auth', null);
+  return (s && s.access_token && s.user) ? s : null;
+}
+function setAuthSession(s) { storageWrite('dp_auth', s); }
+function clearAuthSession() {
+  try { localStorage.removeItem('dp_auth'); } catch (e) {}
+}
+
+/* 当前登录用户的昵称（未登录返回 ''） */
+function authNickname() {
+  var s = getAuthSession();
+  return (s && s.user && s.user.nickname) || '';
+}
+
+/* Auth 接口统一请求封装：path 形如 'signup' 或 'token?grant_type=password'。
+   accessToken 可选（登出时传用户 token）；未配置云端 / 网络错误返回 {status:0}，
+   任何异常都在这里消化，与 cloudRequest 风格一致 */
+function authRequest(path, body, accessToken) {
+  if (!cloudReady()) return Promise.resolve({ status: 0, data: null });
+  var headers = {
+    'apikey': SUPABASE_CONFIG.anonKey,
+    'Content-Type': 'application/json'
+  };
+  if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+  return fetch(SUPABASE_CONFIG.url.replace(/\/+$/, '') + '/auth/v1/' + path, {
+    method: 'POST', headers: headers, body: JSON.stringify(body || {})
+  }).then(function (res) {
+    return res.text().then(function (text) {
+      var data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+      return { status: res.status, data: data };
+    });
+  }).catch(function () { return { status: 0, data: null }; });
+}
+
+/* 把 Auth 接口返回的数据整理成本站会话结构；缺 token / user 视为失败 */
+function normalizeAuthSession(data) {
+  if (!data || !data.user || !data.access_token) return null;
+  var meta = data.user.user_metadata || {};
+  var email = data.user.email || '';
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token || '',
+    expires_at: data.expires_at || (Math.floor(Date.now() / 1000) + (data.expires_in || 3600)),
+    user: {
+      id: data.user.id || '',
+      email: email,
+      /* 注册时未传昵称则用邮箱前缀兜底，保证按钮上始终有字可显 */
+      nickname: meta.nickname || (email ? email.split('@')[0] : '用户')
+    }
+  };
+}
+
+/* 非 2xx / 网络错误 → 友好中文提示。
+   Supabase 错误体常见字段：{code:'email_not_confirmed',msg:'...'}
+   或旧版 {error:'invalid_grant',error_description:'...'}，这里都做兼容 */
+function authErrorMessage(status, data) {
+  if (status === 0) return '网络异常，请检查网络后重试';
+  var code = String((data && (data.code || data.error)) || '').toLowerCase();
+  var msg = String((data && (data.msg || data.error_description || data.message)) || '');
+  /* code 与文字描述一起匹配：旧版 GoTrue 对「邮箱未验证」返回的是
+     error=invalid_grant + error_description='Email not confirmed'，
+     只看 code 会误判成密码错误 */
+  var hay = (code + ' ' + msg).toLowerCase();
+  if (status === 400) {
+    if (hay.indexOf('not_confirmed') > -1 || hay.indexOf('not confirmed') > -1) {
+      return '邮箱还没有验证，请先点击确认邮件里的链接（留意垃圾邮件）';
+    }
+    if (hay.indexOf('already') > -1 || hay.indexOf('exists') > -1) {
+      return '该邮箱已注册，请直接登录';
+    }
+    if (code.indexOf('invalid') > -1 || hay.indexOf('invalid login') > -1) {
+      return '邮箱或密码不正确';
+    }
+    if (hay.indexOf('rate_limit') > -1 || hay.indexOf('too many') > -1) {
+      return '操作太频繁，请稍后再试';
+    }
+    return msg || '邮箱或密码有误，或该邮箱已注册';
+  }
+  if (status === 422) return '密码太短，至少需要 6 位';
+  if (status === 429) return '尝试过于频繁，请稍后再试';
+  return msg ? ('操作失败：' + msg) : ('操作失败（错误码 ' + status + '）');
+}
+
+/* 简单邮箱格式校验 */
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+/* 会话过期时用 refresh_token 静默续期一次；失败则清除本地会话 */
+function refreshAuthSession() {
+  var s = getAuthSession();
+  if (!s || !s.refresh_token) return Promise.resolve(null);
+  /* 未过期（留 60 秒缓冲）直接跳过，避免多余请求 */
+  if ((s.expires_at || 0) * 1000 > Date.now() + 60 * 1000) return Promise.resolve(s);
+  return authRequest('token?grant_type=refresh_token', { refresh_token: s.refresh_token })
+    .then(function (r) {
+      var next = r.status === 200 ? normalizeAuthSession(r.data) : null;
+      if (next) { setAuthSession(next); return next; }
+      clearAuthSession();  // 刷新失败：refresh_token 大概率已失效，清掉
+      return null;
+    });
+}
+
+/* 邮箱 + 密码登录；成功返回会话，失败弹 err(中文提示) 并返回 null */
+function authLogin(email, password, err) {
+  return authRequest('token?grant_type=password', { email: email, password: password })
+    .then(function (r) {
+      var s = r.status === 200 ? normalizeAuthSession(r.data) : null;
+      if (s) return s;
+      err(authErrorMessage(r.status, r.data));
+      return null;
+    });
+}
+
+/* 邮箱注册（昵称写进 user_metadata）；成功返回 {session} 或 {needVerify:true}
+   （站点开启「确认邮箱」时 Supabase 只返回 user 不返回 session） */
+function authSignup(email, nickname, password, err) {
+  return authRequest('signup', {
+    email: email,
+    password: password,
+    data: { nickname: nickname }
+  }).then(function (r) {
+    if (r.status < 200 || r.status >= 300) {
+      err(authErrorMessage(r.status, r.data));
+      return null;
+    }
+    var s = normalizeAuthSession(r.data);
+    if (s) return { session: s };
+    if (r.data && r.data.user) {
+      /* 开启「防用户枚举」后，重复注册会返回 identities 为空数组的影子用户，
+         说明该邮箱其实已经注册过（Supabase 故意不直接报错以防探测邮箱） */
+      if (Array.isArray(r.data.user.identities) && r.data.user.identities.length === 0) {
+        err('该邮箱已注册，请直接登录（若忘记密码可在登录页再试或联系站长）');
+        return null;
+      }
+      /* 后台开启了「确认邮箱」：只返回 user 不发会话，需要收信验证 */
+      return { needVerify: true };
+    }
+    err('注册响应异常，请稍后再试（HTTP ' + r.status + '）');
+    return null;
+  });
+}
+
+/* 退出登录：云端注销尽力而为（失败也无所谓），本地会话一定清除 */
+function authLogout() {
+  var s = getAuthSession();
+  if (s && s.access_token) authRequest('logout', {}, s.access_token);
+  clearAuthSession();
+}
+
+/* ------------------------ 登录入口与弹窗 UI ------------------------ */
+
+/* 昵称超长截断：超过 6 字只留前 6 字 + … */
+function shortNickname(nick) {
+  nick = String(nick || '');
+  return nick.length > 6 ? nick.slice(0, 6) + '…' : nick;
+}
+
+/* 登录 / 退出后广播事件，article.js / submit.js 监听后同步刷新昵称框 */
+function notifyAuthChange() {
+  try {
+    document.dispatchEvent(new CustomEvent('dp_auth_change'));
+  } catch (e) {
+    var ev = document.createEvent('Event');  // 老浏览器兜底
+    ev.initEvent('dp_auth_change', false, false);
+    document.dispatchEvent(ev);
+  }
+}
+
+/* 刷新导航上的登录按钮：未登录显示「登录」，已登录显示昵称（超长截断） */
+function renderLoginBtn() {
+  var session = getAuthSession();
+  var nick = session ? (session.user.nickname || '用户') : '';
+  document.querySelectorAll('.login-btn').forEach(function (btn) {
+    btn.innerHTML = '<span class="login-btn-ico" aria-hidden="true">👤</span>'
+      + '<span class="login-btn-txt">' + escapeHtml(nick ? shortNickname(nick) : '登录') + '</span>';
+    btn.title = nick ? ('已登录：' + (session.user.email || nick)) : '登录 / 注册';
+  });
+}
+
+/* ------------------------ 已登录用户小菜单 ------------------------ */
+var __userMenu = null;
+
+function closeUserMenu() {
+  if (__userMenu) __userMenu.classList.remove('open');
+}
+
+/* 点昵称弹出的小菜单：展示账号信息 + 退出登录 */
+function openUserMenu(btn) {
+  if (!__userMenu) {
+    __userMenu = document.createElement('div');
+    __userMenu.className = 'user-menu';
+    document.body.appendChild(__userMenu);
+    /* 点菜单与登录按钮之外的任意区域关闭 */
+    document.addEventListener('click', function (e) {
+      if (!__userMenu.classList.contains('open')) return;
+      if (e.target.closest('.user-menu') || e.target.closest('.login-btn')) return;
+      closeUserMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeUserMenu();
+    });
+    window.addEventListener('scroll', closeUserMenu);  // 菜单是固定定位，滚动即错位，直接关
+    window.addEventListener('resize', closeUserMenu);
+  }
+  var session = getAuthSession();
+  if (!session) return;
+  __userMenu.innerHTML =
+    '<div class="user-menu-head"><strong>' + escapeHtml(session.user.nickname || '用户') + '</strong>'
+    + '<span>' + escapeHtml(session.user.email || '') + '</span></div>'
+    + '<button type="button" class="user-menu-item" id="userLogoutBtn">退出登录</button>';
+  $('userLogoutBtn').addEventListener('click', function () {
+    authLogout();
+    closeUserMenu();
+    renderLoginBtn();
+    notifyAuthChange();
+    showToast('已退出登录');
+  });
+  /* 固定定位到登录按钮正下方（右缘对齐），滚动时由上面的监听自动关闭 */
+  var rect = btn.getBoundingClientRect();
+  __userMenu.style.top = (rect.bottom + 8) + 'px';
+  __userMenu.style.right = Math.max(8, window.innerWidth - rect.right) + 'px';
+  __userMenu.classList.add('open');
+}
+
+/* -------------------------- 登录 / 注册弹窗 -------------------------- */
+var __authMask = null;   // 遮罩 + 对话框，首次打开时创建，全站只建一次
+
+function switchAuthTab(name) {
+  __authMask.querySelectorAll('.auth-tab').forEach(function (t) {
+    t.classList.toggle('active', t.getAttribute('data-auth-tab') === name);
+  });
+  __authMask.querySelectorAll('.auth-form').forEach(function (f) {
+    f.classList.toggle('active', f.getAttribute('data-auth-form') === name);
+  });
+}
+
+/* 在表单内显示提示：isError=true 红字报错，否则绿色成功提示 */
+function showAuthMsg(form, text, isError) {
+  var el = form.querySelector('.auth-msg');
+  el.textContent = text || '';
+  el.classList.toggle('error', !!isError);
+  el.classList.toggle('ok', !isError && !!text);
+}
+
+/* 提交按钮加载态：文字换成「请稍候…」并禁用，结束后还原 */
+function setAuthLoading(btn, loading) {
+  if (loading) {
+    btn.setAttribute('data-orig-text', btn.textContent);
+    btn.textContent = '请稍候…';
+    btn.disabled = true;
+  } else {
+    btn.textContent = btn.getAttribute('data-orig-text') || btn.textContent;
+    btn.removeAttribute('data-orig-text');
+    btn.disabled = false;
+  }
+}
+
+/* 登录 / 注册成功后的统一收尾：存会话、关弹窗、刷新按钮并广播 */
+function onAuthSuccess(session) {
+  setAuthSession(session);
+  closeLoginModal();
+  closeUserMenu();
+  renderLoginBtn();
+  notifyAuthChange();
+  showToast('欢迎回来，' + (session.user.nickname || '用户'));
+}
+
+function openLoginModal() {
+  ensureLoginModal();
+  switchAuthTab('login');
+  showAuthMsg($('authLoginForm'), '', false);
+  showAuthMsg($('authSignupForm'), '', false);
+  __authMask.classList.add('open');
+  /* 聚焦第一个输入框，方便直接输入 */
+  var first = __authMask.querySelector('.auth-form.active input');
+  if (first) setTimeout(function () { first.focus(); }, 60);
+}
+
+function closeLoginModal() {
+  if (__authMask) __authMask.classList.remove('open');
+}
+
+/* 构建弹窗 DOM（div 动态创建，不用 <dialog> 以兼容旧浏览器） */
+function ensureLoginModal() {
+  if (__authMask) return;
+
+  __authMask = document.createElement('div');
+  __authMask.className = 'auth-mask';
+  __authMask.id = 'authMask';
+  __authMask.innerHTML =
+    '<div class="auth-dialog" role="dialog" aria-modal="true" aria-label="登录或注册">'
+    +   '<button type="button" class="auth-close" aria-label="关闭">✕</button>'
+    +   '<div class="auth-tabs">'
+    +     '<button type="button" class="auth-tab active" data-auth-tab="login">登录</button>'
+    +     '<button type="button" class="auth-tab" data-auth-tab="signup">注册</button>'
+    +   '</div>'
+    +   '<form class="auth-form active" data-auth-form="login" id="authLoginForm" novalidate>'
+    +     '<label class="auth-field"><span>邮箱</span>'
+    +       '<input type="email" id="authLoginEmail" placeholder="you@example.com" autocomplete="email"></label>'
+    +     '<label class="auth-field"><span>密码</span>'
+    +       '<input type="password" id="authLoginPwd" placeholder="至少 6 位" autocomplete="current-password"></label>'
+    +     '<p class="auth-msg"></p>'
+    +     '<button type="submit" class="btn btn-primary auth-submit">登录</button>'
+    +   '</form>'
+    +   '<form class="auth-form" data-auth-form="signup" id="authSignupForm" novalidate>'
+    +     '<label class="auth-field"><span>邮箱</span>'
+    +       '<input type="email" id="authSignupEmail" placeholder="you@example.com" autocomplete="email"></label>'
+    +     '<label class="auth-field"><span>昵称</span>'
+    +       '<input type="text" id="authSignupNick" maxlength="12" placeholder="怎么称呼你？（最多 12 字）"></label>'
+    +     '<label class="auth-field"><span>密码</span>'
+    +       '<input type="password" id="authSignupPwd" placeholder="至少 6 位" autocomplete="new-password"></label>'
+    +     '<label class="auth-field"><span>确认密码</span>'
+    +       '<input type="password" id="authSignupPwd2" placeholder="再输入一遍密码" autocomplete="new-password"></label>'
+    +     '<p class="auth-msg"></p>'
+    +     '<button type="submit" class="btn btn-primary auth-submit">注册</button>'
+    +   '</form>'
+    + '</div>';
+  document.body.appendChild(__authMask);
+
+  /* 关闭：右上角 ✕ / 点遮罩空白处 / Esc */
+  __authMask.querySelector('.auth-close').addEventListener('click', closeLoginModal);
+  __authMask.addEventListener('click', function (e) {
+    if (e.target === __authMask) closeLoginModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && __authMask.classList.contains('open')) closeLoginModal();
+  });
+
+  /* 登录 / 注册标签页切换 */
+  __authMask.querySelectorAll('.auth-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      switchAuthTab(tab.getAttribute('data-auth-tab'));
+    });
+  });
+
+  /* 登录提交 */
+  var loginForm = $('authLoginForm');
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var submitBtn = loginForm.querySelector('.auth-submit');
+    var email = $('authLoginEmail').value.trim();
+    var pwd = $('authLoginPwd').value;
+    if (!isValidEmail(email)) { showAuthMsg(loginForm, '请输入正确的邮箱地址', true); return; }
+    if (pwd.length < 6) { showAuthMsg(loginForm, '密码太短，至少需要 6 位', true); return; }
+    showAuthMsg(loginForm, '', false);
+    setAuthLoading(submitBtn, true);
+    authLogin(email, pwd, function (msg) {
+      setAuthLoading(submitBtn, false);
+      showAuthMsg(loginForm, msg, true);
+    }).then(function (s) {
+      if (s) onAuthSuccess(s);
+    });
+  });
+
+  /* 注册提交 */
+  var signupForm = $('authSignupForm');
+  signupForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var submitBtn = signupForm.querySelector('.auth-submit');
+    var email = $('authSignupEmail').value.trim();
+    var nick = $('authSignupNick').value.trim();
+    var pwd = $('authSignupPwd').value;
+    var pwd2 = $('authSignupPwd2').value;
+    if (!isValidEmail(email)) { showAuthMsg(signupForm, '请输入正确的邮箱地址', true); return; }
+    if (!nick) { showAuthMsg(signupForm, '请填写昵称', true); return; }
+    if (pwd.length < 6) { showAuthMsg(signupForm, '密码太短，至少需要 6 位', true); return; }
+    if (pwd !== pwd2) { showAuthMsg(signupForm, '两次输入的密码不一致', true); return; }
+    showAuthMsg(signupForm, '', false);
+    setAuthLoading(submitBtn, true);
+    authSignup(email, nick, pwd, function (msg) {
+      setAuthLoading(submitBtn, false);
+      showAuthMsg(signupForm, msg, true);
+    }).then(function (res) {
+      if (!res) return;
+      if (res.needVerify) {
+        /* 后台开启了「确认邮箱」：注册成功但没直接发会话。
+           再用同一密码试登录一次——站长若关闭了邮箱确认，这一步会直接成功；
+           仍要求验证时，GoTrue 返回 email_not_confirmed，再引导去收信 */
+        showAuthMsg(signupForm, '注册成功，正在自动登录…', false);
+        authLogin(email, pwd, function () { /* 错误统一在下面按返回值处理 */ })
+          .then(function (s2) {
+            setAuthLoading(submitBtn, false);
+            if (s2) { onAuthSuccess(s2); return; }
+            showAuthMsg(signupForm,
+              '注册成功！请先到邮箱查收确认邮件（留意垃圾邮件），点击验证链接后再登录。', false);
+          });
+        return;
+      }
+      onAuthSuccess(res.session);
+    });
+  });
+}
+
+/* ------------------------ 导航登录入口注入 ------------------------ */
+/* 在每个页面的 .nav-bar 里、主题切换按钮之前插入登录按钮（不改 HTML） */
+function initLoginUI() {
+  document.querySelectorAll('.nav-bar').forEach(function (bar) {
+    if (bar.querySelector('.login-btn')) return;  // 防止重复注入
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'icon-btn login-btn';
+    btn.id = 'loginBtn';
+    var themeBtn = bar.querySelector('.theme-toggle');
+    if (themeBtn) bar.insertBefore(btn, themeBtn);
+    else bar.appendChild(btn);
+    btn.addEventListener('click', function () {
+      if (getAuthSession()) {
+        /* 已登录：点昵称开 / 关小菜单 */
+        if (__userMenu && __userMenu.classList.contains('open')) closeUserMenu();
+        else openUserMenu(btn);
+      } else {
+        openLoginModal();
+      }
+    });
+  });
+  renderLoginBtn();
+  /* 会话过期则静默刷新一次（失败会清掉会话），随后统一刷新按钮并广播，
+     让评论 / 投稿页的昵称框与最新登录状态保持一致 */
+  refreshAuthSession().then(function () {
+    renderLoginBtn();
+    notifyAuthChange();
+  });
+}
+
 /* 点赞：基础赞数在 data.js（a.likes），本机点赞后再 +1 */
 function getLikedMap() {
   var m = storageRead('dp_likes', {});
@@ -308,20 +751,34 @@ function refreshCloudStats() {
   });
 }
 
+/* 点赞同步锁：上一次云端同步没完成前忽略新的点击，
+   防止手机双击/快速连点导致「查询时记录还没插入→漏删除→云端残留孤儿记录」，
+   孤儿记录会让赞数永远降不下来（表现为“取消不了”） */
+var __likeSyncing = {};
+
 function initLikeAction() {
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('button[data-like]');
     if (!btn) return;
     e.preventDefault();
     var id = btn.getAttribute('data-like');
+    if (__likeSyncing[id]) return;  // 同步进行中，忽略本次点击
+    __likeSyncing[id] = true;
     var liked = !isArticleLiked(id);
     /* 本地即时切换：保证 UI 零延迟反馈 */
     setArticleLiked(id, liked);
     syncLikeUI(id);
     showToast(liked ? '点赞成功，谢谢你的喜欢' : '已取消点赞');
-    /* 异步同步到云端，成功后用云端真实数刷新数字 */
+    /* 异步同步到云端；取消失败时明确提示（一般是云端缺 DELETE 权限策略） */
     cloudSetLike(id, liked).then(function (ok) {
-      if (ok) syncLikeUICloud(id);
+      delete __likeSyncing[id];
+      if (ok) {
+        syncLikeUICloud(id);
+      } else if (!liked) {
+        showToast('云端取消失败，已在本机取消');
+      } else {
+        showToast('云端同步失败，点赞暂存本机');
+      }
     });
   });
 }
@@ -468,6 +925,95 @@ function initNavSearch() {
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') go();
   });
+
+  /* ---------- 热搜榜下拉：搜索框聚焦 / 输入时弹出，按热度取前 5 篇 ----------
+     热度 = data.js 基础赞数（a.likes）+ 云端真实点赞数（异步获取），
+     云端取不到时退回基础值排序，拿到云端数据后更新数字并重排重渲染一次。 */
+  var drop = null;        // 下拉容器（首次打开时动态创建，挂在 .nav-search 内）
+  var hotItems = null;    // 参与排名的前 5 篇文章（含热度），本页只初始化一次
+  var cloudDone = false;  // 云端赞数是否已拉取（本页只拉一次，避免重复请求）
+
+  /* 创建下拉容器并绑定行点击跳转 */
+  function ensureDrop() {
+    if (drop) return drop;
+    drop = document.createElement('div');
+    drop.className = 'hot-drop';
+    // .nav-search 已设置 position:relative，下拉绝对定位于其下方
+    input.parentNode.appendChild(drop);
+    // 点击某一行 → 跳到对应文章详情页
+    drop.addEventListener('click', function (e) {
+      var item = e.target.closest('.hot-drop-item');
+      if (item) location.href = 'article.html?id=' + item.getAttribute('data-id');
+    });
+    return drop;
+  }
+
+  /* 组装榜单数据：复制基础数据并按基础赞数倒序取前 5 */
+  function buildHotItems() {
+    hotItems = ARTICLES.map(function (a) {
+      return { id: a.id, title: a.title, base: a.likes || 0, heat: a.likes || 0 };
+    }).sort(function (x, y) { return y.heat - x.heat; }).slice(0, 5);
+  }
+
+  /* 渲染下拉：排名序号（前三名金/银/铜高亮）+ 标题 + 右侧热度值 */
+  function renderDrop() {
+    var d = ensureDrop();
+    var html = '<div class="hot-drop-head">🔥 热搜榜</div>';
+    hotItems.forEach(function (it, i) {
+      var cls = i === 0 ? ' top-1' : (i === 1 ? ' top-2' : (i === 2 ? ' top-3' : ''));
+      html += '<div class="hot-drop-item' + cls + '" data-id="' + it.id + '">'
+        + '<span class="hot-drop-rank">' + (i + 1) + '</span>'
+        + '<span class="hot-drop-title">' + escapeHtml(it.title) + '</span>'
+        + '<span class="hot-drop-heat">🔥 ' + it.heat + '</span>'
+        + '</div>';
+    });
+    d.innerHTML = html;
+  }
+
+  /* 异步拉取云端真实赞数：全部返回后重排一次；下拉开着才需要重渲染 */
+  function fetchCloudHeat() {
+    if (cloudDone || !hotItems) return;
+    cloudDone = true;
+    var left = hotItems.length;
+    hotItems.forEach(function (it) {
+      cloudGetLikeCount(it.id).then(function (n) {
+        if (n != null) it.heat = it.base + n; // 热度 = 基础赞数 + 云端赞数
+        left--;
+        if (left === 0) {
+          hotItems.sort(function (x, y) { return y.heat - x.heat; });
+          if (drop && drop.classList.contains('open')) renderDrop();
+        }
+      });
+    });
+  }
+
+  function openHotDrop() {
+    if (!hotItems) buildHotItems();
+    renderDrop();
+    drop.classList.add('open');
+    fetchCloudHeat();
+  }
+
+  function closeHotDrop() {
+    if (drop) drop.classList.remove('open');
+  }
+
+  // 聚焦或输入时弹出热搜榜；mousedown 兜底（个别浏览器/插件会吞掉 focus 事件）
+  input.addEventListener('mousedown', openHotDrop);
+  input.addEventListener('focus', openHotDrop);
+  input.addEventListener('input', openHotDrop);
+  // 失焦延迟 150ms 再关闭，避免吃掉下拉项的 click 事件
+  input.addEventListener('blur', function () {
+    setTimeout(closeHotDrop, 150);
+  });
+  // 点击页面其他区域关闭
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.nav-search')) closeHotDrop();
+  });
+  // 按 Esc 关闭
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeHotDrop();
+  });
 }
 
 /* ---------- 七、整卡可点击：点击带 data-href 的卡片任意位置跳转 --------- */
@@ -479,6 +1025,42 @@ function initCardClick() {
   });
 }
 
+/* ------------------- 八、滚动渐入（IntersectionObserver） ------------------- */
+/* 给文章卡片与各 section 的直接子元素加 .reveal-in，进入视口后补 .is-visible，
+   播放「上移 10px + 淡入」的入场动效。CSS 只在 html.js 下应用初始隐藏，
+   因此无 JS、或旧版 Firefox / Safari 不支持 IntersectionObserver 时
+   直接 return，不做任何隐藏，内容始终完整可见。 */
+function initRevealOnScroll() {
+  // 浏览器不支持 IntersectionObserver：放弃动效，内容保持可见
+  if (typeof IntersectionObserver !== 'function') return;
+
+  // 排除轮播：其子元素（轨道/箭头）自带 transform 过渡，避免相互干扰
+  var targets = document.querySelectorAll('.article-card, main section:not(.carousel) > *');
+  if (!targets.length) return;
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      var el = entry.target;
+      el.classList.add('is-visible');
+      observer.unobserve(el); // 只播放一次，之后不再监听该元素
+      // 入场播完后移除辅助类与级联延迟，把过渡节奏还给卡片自身的 hover 效果
+      var delay = parseFloat(el.style.transitionDelay) || 0;
+      setTimeout(function () {
+        el.classList.remove('reveal-in', 'is-visible');
+        el.style.transitionDelay = '';
+      }, delay + 600);
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -36px 0px' });
+
+  targets.forEach(function (el, i) {
+    el.classList.add('reveal-in');
+    // 级联延迟：按 DOM 序号每个 +60ms，封顶 300ms
+    el.style.transitionDelay = Math.min(i * 60, 300) + 'ms';
+    observer.observe(el);
+  });
+}
+
 /* ----------------------------- 初始化 -------------------------------- */
 document.addEventListener('DOMContentLoaded', function () {
   initThemeToggle();
@@ -486,6 +1068,11 @@ document.addEventListener('DOMContentLoaded', function () {
   initNavSearch();
   initCardClick();
   initLikeAction();
+  initLoginUI();  // 注入导航登录入口 + 会话静默续期
+
+  // 滚动渐入：本文件的 DOMContentLoaded 监听先于各页渲染脚本注册，
+  // 用 setTimeout(0) 推迟到本轮事件全部处理完后收集，才能拿到脚本渲染出的卡片
+  setTimeout(initRevealOnScroll, 0);
 
   // 云端统计异步刷新：延迟一点，等列表/详情页脚本先把卡片渲染出来再拉云端数据
   setTimeout(refreshCloudStats, 300);
