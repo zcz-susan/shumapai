@@ -1002,90 +1002,134 @@ html[data-theme="dark"] .wall-badge.mine { background: rgba(5, 150, 105, 0.16); 
   white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 14.3 手机评分榜页 ---------- */
-/* 表格容器：宽度不够时横向滚动 */
-.rate-table-wrap {
-  overflow-x: auto;
-  margin-top: 8px;
-  background: var(--card);
-  border: 1px solid var(--border); border-radius: var(--radius);
+/* ---------- 14.3 手机实测榜单页（跑分 / 芯片 / 续航 三 Tab 条形榜） ---------- */
+/* Tab 切换条：分段胶囊控件，风格与登录弹窗页签一致 */
+.rk-tabs {
+  display: inline-flex; gap: 4px; padding: 4px;
+  background: var(--c-soft); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 22px;
+}
+.rk-tab {
+  padding: 9px 22px; border-radius: 9px;
+  font-size: 14.5px; font-weight: 600; color: var(--text-2);
+  white-space: nowrap; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.rk-tab:hover { color: var(--text); }
+.rk-tab.active {
+  background: var(--bg-elevated); color: var(--c-primary-strong);
   box-shadow: var(--shadow-sm);
 }
-.rate-table { width: 100%; border-collapse: collapse; min-width: 760px; }
-.rate-table th, .rate-table td {
-  padding: 13px 16px; text-align: left;
-  white-space: nowrap; font-size: 14.5px;
-}
-.rate-table thead th {
-  font-size: 13.5px; font-weight: 700; color: var(--text-2);
-  background: var(--c-soft);
-  border-bottom: 1px solid var(--border-strong);
-}
-.rate-table th.sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
-.rate-table th.sortable:hover { color: var(--c-primary-strong); }
-.rate-table th.sorted { color: var(--c-primary-strong); }
-.rate-table tbody tr { transition: background-color 0.15s; }
-.rate-table tbody tr:hover { background: var(--c-soft); }
-.rate-table tbody td { border-bottom: 1px solid var(--border); color: var(--text); }
-.rate-table tbody tr:last-child td { border-bottom: none; }
-.rate-phone-name { font-weight: 600; }
-.rate-price { color: var(--text-2); }
-/* 总分列：加粗高亮 */
-.rate-total { font-weight: 800; color: var(--c-primary-strong); font-size: 15.5px; }
-/* 行首名次：总分前 3 名奖牌色圆徽章，其余纯数字 */
-.rate-medal {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%;
-  font-size: 13px; font-weight: 800; color: #fff;
-}
-.rate-medal.top-1 { background: linear-gradient(135deg, #fbbf24, #d97706); box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45); }
-.rate-medal.top-2 { background: linear-gradient(135deg, #cbd5e1, #94a3b8); box-shadow: 0 2px 8px rgba(148, 163, 184, 0.4); }
-.rate-medal.top-3 { background: linear-gradient(135deg, #d97706, #b45309); box-shadow: 0 2px 8px rgba(180, 83, 9, 0.4); }
-.rate-rank-plain {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px;
-  font-size: 13.5px; font-weight: 600; color: var(--text-3);
-}
 
-/* 逐机点评卡片：左侧信息 + 五维进度条，右侧总分大数字 */
-.rate-cards { display: flex; flex-direction: column; gap: 18px; }
-.rate-card {
-  display: flex; align-items: center; gap: 28px;
-  padding: 22px 26px;
+/* 面板：同一时间只显示一个，切出时带轻微淡入 */
+.rk-panel { display: none; }
+.rk-panel.active { display: block; animation: authFadeIn 0.25s ease; }
+.rk-panel-head {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.rk-panel-head h2 { font-size: 19px; font-weight: 700; letter-spacing: 0.2px; }
+.rk-unit { font-size: 13px; color: var(--text-3); }
+
+/* 榜单行：左侧名次 + 右侧主体（名称行 + 条形） */
+.rk-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 13px 18px; margin-bottom: 10px;
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
-  transition: all 0.25s ease;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
-.rate-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--border-strong); }
-.rate-card-main { flex: 1; min-width: 0; }
-.rate-card-head {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 4px;
+.rk-row:hover {
+  transform: translateY(-2px); border-color: var(--border-strong);
+  box-shadow: var(--shadow-hover);
 }
-.rate-card-head h3 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-.rate-card-price { font-size: 13.5px; font-weight: 600; color: var(--c-primary-strong); }
-.rate-card-comment { font-size: 13.5px; color: var(--text-2); margin-bottom: 16px; }
-.rate-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px 18px; }
-.rate-bar-label {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-size: 12px; color: var(--text-2); margin-bottom: 5px;
+.rk-no {
+  flex: none; width: 32px; text-align: center;
+  font-size: 17px; font-weight: 800; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
 }
-.rate-bar-label span:last-child { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
-.rate-bar-track { height: 6px; border-radius: 999px; background: var(--c-soft); overflow: hidden; }
-.rate-bar-fill {
-  height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--c-primary), var(--c-primary-strong));
-  transition: width 0.4s ease;
+/* 前三名：金银铜配色（铜色在深底上加亮，避免糊成一团） */
+.rk-no-1 { color: #f59e0b; }
+.rk-no-2 { color: #9aa7ba; }
+.rk-no-3 { color: #d08a4e; }
+.rk-main { flex: 1; min-width: 0; }
+.rk-line {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 8px;
 }
-.rate-card-total {
-  flex: none; min-width: 96px; text-align: center;
-  padding-left: 26px; border-left: 1px dashed var(--border);
+.rk-name { font-size: 15.5px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.rk-tags { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.rk-tag {
+  padding: 1px 9px; border-radius: 999px;
+  background: var(--c-soft); color: var(--text-2);
+  font-size: 11.5px; font-style: normal; white-space: nowrap;
 }
-.rate-card-total .num {
-  font-size: 36px; font-weight: 800; color: var(--c-primary-strong);
-  letter-spacing: -0.02em; line-height: 1.2;
+/* 续航行右侧：剩余电量 */
+.rk-remain {
+  margin-left: auto; flex: none;
+  font-size: 13px; color: var(--text-2); white-space: nowrap;
 }
-.rate-card-total .lbl { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.rk-remain b {
+  font-size: 16px; color: #7b7ff5;
+  font-variant-numeric: tabular-nums; margin-left: 3px;
+}
+
+/* 条形轨道 */
+.rk-bar {
+  position: relative;
+  height: 26px; border-radius: 8px;
+  background: var(--c-soft); overflow: hidden;
+}
+/* 紫蓝渐变填充，参考测评小程序榜单配色，加一点辉光 */
+.rk-fill {
+  height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, #5b6ee0, #8b7cf0);
+  box-shadow: 0 0 12px rgba(123, 127, 245, 0.3);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  min-width: 2px;
+}
+/* 分数文字钉在条右端内侧（白字）；条太短时 JS 加 .rk-val-out 落到条右侧外侧（深字） */
+.rk-val {
+  position: absolute; top: 50%;  /* left 由 JS 按条长内联设置 */
+  transform: translateY(-50%) translateX(calc(-100% - 10px));  /* 默认贴在条右端内侧 */
+  font-size: 13.5px; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+.rk-val-out {
+  transform: translateY(-50%) translateX(10px);
+  color: var(--text);
+  text-shadow: none;
+}
+
+/* 续航堆叠条：六环节耗电彩段 + 紫色剩余段，宽度由 JS 按比例归一化 */
+.rk-bar-stack { display: flex; overflow: hidden; }
+.rk-seg {
+  height: 100%; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden;
+}
+.rk-seg-left {
+  background: #7b7ff5;
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.18);  /* 与耗电段的细微分隔 */
+}
+/* 彩段图例 */
+.rk-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 16px;
+  margin: -4px 0 16px;
+  font-size: 12px; color: var(--text-2);
+}
+.rk-legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.rk-legend-item i { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.rk-legend-left { background: #7b7ff5; }
+
+/* 底部数据来源声明 */
+.rk-source {
+  margin: 28px 0 0; padding: 14px 16px;
+  font-size: 12.5px; line-height: 1.8; color: var(--text-3);
+  background: var(--c-soft); border-radius: var(--radius-sm);
+}
 
 /* ---------- 14.4 新页面响应式与导航宽度适配 ---------- */
 /* 新增两个导航项后，中屏宽度下稍微收紧导航，避免拥挤换行 */
@@ -1095,7 +1139,9 @@ html[data-theme="dark"] .wall-badge.mine { background: rgba(5, 150, 105, 0.16); 
 }
 
 @media (max-width: 960px) {
-  .rate-bars { grid-template-columns: repeat(3, 1fr); }
+  /* 榜单 Tab 在平板上整行均分，避免三个按钮挤在一侧 */
+  .rk-tabs { display: flex; width: 100%; }
+  .rk-tab { flex: 1; padding: 9px 10px; }
 }
 
 @media (max-width: 720px) {
@@ -1105,13 +1151,17 @@ html[data-theme="dark"] .wall-badge.mine { background: rgba(5, 150, 105, 0.16); 
   .hot-rank { width: 32px; height: 32px; border-radius: 10px; font-size: 14px; }
   .hot-title { font-size: 14.5px; }
   .hot-heat { font-size: 13px; }
-  /* 评分卡片移动端改为纵向堆叠，总分数字移到卡片底部 */
-  .rate-card { flex-direction: column; align-items: stretch; gap: 16px; padding: 18px 16px; }
-  .rate-card-total {
-    min-width: 0; padding-left: 0; padding-top: 14px;
-    border-left: none; border-top: 1px dashed var(--border);
-  }
-  .rate-bars { grid-template-columns: repeat(2, 1fr); }
+  /* 实测榜单手机端：收紧行距与字号，标签允许自然折行 */
+  .rk-row { padding: 12px 13px; gap: 10px; }
+  .rk-no { width: 24px; font-size: 15px; }
+  .rk-name { font-size: 14.5px; }
+  .rk-bar { height: 24px; }
+  .rk-val { font-size: 12.5px; }
+  .rk-seg { font-size: 10px; }
+  /* 续航行的「剩余 xx%」折到下一行右对齐，不挤压机型名 */
+  .rk-remain { margin-left: 0; width: 100%; text-align: right; margin-top: -2px; }
+  .rk-tab { font-size: 13px; padding: 9px 6px; }
+  .rk-panel-head h2 { font-size: 17px; }
 }
 
 /* ==========================================================================
