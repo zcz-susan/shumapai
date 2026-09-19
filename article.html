@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>文章详情 · 数码派</title>
   <meta name="description" content="数码派文章详情页。">
+  <link rel="canonical" href="https://zcz-susan.github.io/shumapai/article.html">
+  <meta name="theme-color" content="#0a0d14">
+  <link rel="apple-touch-icon" href="https://zcz-susan.github.io/shumapai/apple-touch-icon.png">
+  <!-- Open Graph / Twitter Card：分享到社交平台时显示标题、摘要与预览图 -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="数码派">
+  <meta property="og:title" content="文章详情 · 数码派">
+  <meta property="og:description" content="数码派文章详情页。">
+  <meta property="og:url" content="https://zcz-susan.github.io/shumapai/article.html">
+  <meta property="og:image" content="https://zcz-susan.github.io/shumapai/images/iphone-duo-1.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="文章详情 · 数码派">
+  <meta name="twitter:description" content="数码派文章详情页。">
+  <meta name="twitter:image" content="https://zcz-susan.github.io/shumapai/images/iphone-duo-1.jpg">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2335618f'/%3E%3Cpath d='M5 16h5l3-7 3 14 3-11 2 4h6' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <script>
     (function () {
@@ -14,7 +28,7 @@
       document.documentElement.setAttribute('data-theme', theme);
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20260919b">
 
   <!-- Google Analytics 访问统计：免费，可看实时在线、城市、设备、来源（衡量ID：G-126PKG1057） -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-126PKG1057"></script>
@@ -27,6 +41,9 @@
 </head>
 <body>
 
+  <!-- 键盘用户快捷入口：Tab 第一站，回车直达正文，视觉上默认隐藏 -->
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
   <!-- ======================== 顶部导航栏（全站统一） ======================== -->
   <header class="site-header">
     <div class="container nav-bar">
@@ -35,7 +52,7 @@
         <span id="siteName">数码派</span>
       </a>
 
-      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单">☰</button>
+      <button class="icon-btn nav-toggle" id="navToggle" aria-label="打开菜单" aria-controls="navMenu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 
       <nav class="nav-menu" id="navMenu">
         <a class="nav-link" href="index.html">首页</a>
@@ -53,11 +70,12 @@
         <button class="nav-search-btn" id="navSearchBtn">搜索</button>
       </div>
 
-      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换深色模式">🌙</button>
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="切换到浅色模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8z"/></svg></button>
     </div>
   </header>
 
-  <main class="container">
+  <main class="container" id="main">
+    <noscript><div class="noscript-tip">本站文章、榜单与评论等内容需要启用 JavaScript 才能正常显示，请在浏览器设置中允许 JavaScript 后刷新页面。</div></noscript>
     <!-- 文章内容由 article.js 根据 URL 上的 id（article.html?id=1）动态渲染 -->
     <div id="articleRoot"></div>
   </main>
@@ -79,7 +97,7 @@
           <h4>互动</h4>
           <a href="submit.html">投稿</a>
           <a href="submit.html">意见反馈</a>
-          <a href="mailto:aze@example.com">联系站长</a>
+          <a href="mailto:zhangcizhou010@163.com">联系站长</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -90,7 +108,7 @@
   </footer>
 
   <script src="js/data.js"></script>
-  <script src="js/common.js"></script>
+  <script src="js/common.js?v=20260919b"></script>
   <script src="js/article.js"></script>
 </body>
 </html>
