@@ -43,7 +43,7 @@ const SITE = {
     '我不喜欢厂商通稿，也不爱做参数党。这里每篇都是我自己买来、用了一段时间之后的真实感受——好用就推荐，有坑就直说。',
     '如果你也对手机、笔电、耳机这些小玩意感兴趣，欢迎在下方的投稿/反馈页和我交流。'
   ],
-  email: 'aze@example.com',
+  email: 'zhangcizhou010@163.com',
   github: 'https://github.com/yourname',
   weibo: 'https://weibo.com/yourname',
   since: 2019
