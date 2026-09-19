@@ -76,6 +76,34 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
 .muted { color: var(--text-2); }
 
+/* 视觉隐藏但屏幕阅读器可读：用于首页唯一 h1 等 SEO / 无障碍节点
+   （不能用 display:none，那样读屏软件也会跳过） */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+/* 跳到主要内容：键盘 Tab 第一站，平时藏在视口外，聚焦时滑下 */
+.skip-link {
+  position: absolute; top: -48px; left: 16px; z-index: 400;
+  padding: 10px 18px; border-radius: 0 0 10px 10px;
+  background: var(--c-primary-strong); color: #fff;
+  font-size: 14px; font-weight: 600;
+  transition: top 0.2s ease;
+}
+.skip-link:focus { top: 0; outline: 2px solid #fff; outline-offset: 2px; }
+
+/* JS 被禁用时 noscript 内的提示条 */
+.noscript-tip {
+  margin: 24px 0; padding: 16px 18px;
+  background: var(--c-soft); border: 1px solid var(--border);
+  border-left: 3px solid var(--c-primary-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-2); font-size: 14px; line-height: 1.7;
+}
+
 /* 页面标题区 */
 .page-head { padding: 44px 0 28px; }
 /* 页面大标题：统一使用 clamp 弹性字号 + 0.5px 正字距，更接近印刷排版的从容感 */
@@ -166,6 +194,8 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   box-shadow: 0 0 12px rgba(88, 124, 178, 0.35);
 }
 .nav-toggle { display: none; }
+/* 导航圆形按钮里的内联 SVG 统一尺寸，颜色由 currentColor 跟随文字/主题 */
+.icon-btn svg { width: 19px; height: 19px; display: block; }
 
 /* ======================== 4. 通用组件 ========================= */
 .btn {
