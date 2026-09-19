@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>手机评分榜 · 数码派</title>
-  <meta name="description" content="数码派手机评分榜：性能、屏幕、影像、续航、性价比五维真实口碑评分，仅供参考。">
+  <title>手机性能续航榜单 · 数码派</title>
+  <meta name="description" content="数码派手机实测榜单：Geekbench 6 单核跑分 Top10、SoC 芯片性能天梯、三小时综合续航实测，数据整理自公开测评数据库。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2335618f'/%3E%3Cpath d='M5 16h5l3-7 3 14 3-11 2 4h6' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
   <!-- 深色模式启动脚本：必须放在样式之前，避免刷新时先闪一下白底 -->
@@ -65,39 +65,52 @@
 
     <!-- 页面标题 -->
     <div class="page-head">
-      <h1>手机评分榜 · 五维真实口碑评分</h1>
-      <p>评分为编辑综合口碑整理，仅供参考。点击表头可按任意维度重新排序。</p>
+      <h1>手机实测榜单</h1>
+      <p>跑分与续航数据整理自 Geekbench 6 与小白测评公开数据库（2026 年 9 月），实测值随系统更新会有浮动，仅供参考。</p>
     </div>
 
-    <!-- ======================== 上半部分：排行榜表格 ======================== -->
-    <!-- 容器带横向滚动，手机上也能看全九列 -->
-    <div class="rate-table-wrap">
-      <table class="rate-table" id="rateTable">
-        <thead>
-          <tr>
-            <th>排名</th>
-            <th>机型</th>
-            <th>价格</th>
-            <!-- 带data-key的表头可点击排序，data-label存原始文字供渲染箭头用 -->
-            <th class="sortable" data-key="perf" data-label="性能">性能</th>
-            <th class="sortable" data-key="screen" data-label="屏幕">屏幕</th>
-            <th class="sortable" data-key="camera" data-label="影像">影像</th>
-            <th class="sortable" data-key="battery" data-label="续航">续航</th>
-            <th class="sortable" data-key="value" data-label="性价比">性价比</th>
-            <th class="sortable" data-key="total" data-label="总分">总分</th>
-          </tr>
-        </thead>
-        <tbody id="rateTableBody"><!-- rate.js 渲染 --></tbody>
-      </table>
-    </div>
-
-    <!-- ======================== 下半部分：逐机点评卡片 ======================== -->
-    <section class="section">
-      <div class="section-head">
-        <h2>逐机点评</h2>
+    <!-- ======================== 榜单切换 Tab ======================== -->
+    <div class="rk-tabs-wrap">
+      <div class="rk-tabs" role="tablist">
+        <button type="button" class="rk-tab active" data-rk-tab="gb6" role="tab">Geekbench 6 跑分</button>
+        <button type="button" class="rk-tab" data-rk-tab="soc" role="tab">SoC 芯片天梯</button>
+        <button type="button" class="rk-tab" data-rk-tab="battery" role="tab">三小时续航</button>
       </div>
-      <div class="rate-cards" id="rateCards"><!-- rate.js 渲染 --></div>
-    </section>
+
+      <!-- ① Geekbench 6 单核跑分 Top10 -->
+      <section class="rk-panel active" id="panelGb6" role="tabpanel">
+        <div class="rk-panel-head">
+          <h2>Geekbench 6 单核跑分 Top 10</h2>
+          <span class="rk-unit">单位：分 · 越高越强</span>
+        </div>
+        <!-- 列表独立容器：rate.js 只往这里写，不能直接覆盖整个面板（会删掉标题） -->
+        <div class="rk-list" id="listGb6"></div>
+      </section>
+
+      <!-- ② SoC 综合性能天梯 -->
+      <section class="rk-panel" id="panelSoc" role="tabpanel">
+        <div class="rk-panel-head">
+          <h2>手机 SoC 综合性能天梯</h2>
+          <span class="rk-unit">综合成绩 = 65% CPU + 35% GPU · 小白测评数据库 4.5</span>
+        </div>
+        <div class="rk-list" id="listSoc"></div>
+      </section>
+
+      <!-- ③ 三小时综合续航总榜 -->
+      <section class="rk-panel" id="panelBattery" role="tabpanel">
+        <div class="rk-panel-head">
+          <h2>三小时综合续航总榜</h2>
+          <span class="rk-unit">WiFi 下 9 大常用 APP 各半小时 · 小白测评数据库 5.0</span>
+        </div>
+        <!-- 分段颜色图例：rate.js 按统一配色生成（放在列表容器外，不会被渲染覆盖） -->
+        <div class="rk-legend" id="batteryLegend"></div>
+        <div class="rk-list" id="listBattery"></div>
+      </section>
+    </div>
+
+    <!-- 数据来源声明 -->
+    <p class="rk-source">数据来源：Geekbench Browser、小白测评 S.White Database 公开榜单，由数码派整理转载；
+      不同机型的工程机 / 量产机、系统版本与测试环境均会影响结果，请以你看到的最新数据库为准。</p>
 
   </main>
 
@@ -129,9 +142,9 @@
     </div>
   </footer>
 
-  <!-- 顺序：先加载数据，再加载公共脚本，最后加载本页脚本 -->
-  <script src="js/data.js"></script>
-  <script src="js/common.js"></script>
-  <script src="js/rate.js"></script>
+  <!-- 顺序：先加载数据，再加载公共脚本，最后加载本页脚本（带版本号，更新后避免浏览器缓存旧文件） -->
+  <script src="js/data.js?v=20260919a"></script>
+  <script src="js/common.js?v=20260919a"></script>
+  <script src="js/rate.js?v=20260919a"></script>
 </body>
 </html>
