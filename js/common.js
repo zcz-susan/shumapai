@@ -864,15 +864,31 @@ function renderArticleContent(raw) {
 }
 
 /* ------------------------ 四、深色模式切换 ---------------------------- */
+/* 统一使用内联 SVG 图标（代替 emoji）：跨平台渲染一致，且能用 currentColor 跟随主题变色。
+   深色时按钮显示太阳（点击去浅色），浅色时显示月亮，与原交互逻辑保持一致。 */
+var ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.6 6.6 0 0 0 21 12.8z"/></svg>';
+var ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+/* 手机端汉堡菜单的「展开 / 收起」图标 */
+var ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
 function initThemeToggle() {
   var btn = $('themeToggle');
   if (!btn) return;
 
+  /* 同步手机浏览器状态栏配色（<meta name="theme-color">），深浅色各一个底色 */
+  function syncThemeColor(dark) {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', dark ? '#0a0d14' : '#f5f6f8');
+  }
+
   // 根据当前模式刷新按钮图标（页面初始模式由 <head> 内的内联脚本设置）
   function syncIcon() {
     var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    btn.textContent = dark ? '☀' : '🌙';
+    btn.innerHTML = dark ? ICON_SUN : ICON_MOON;
     btn.title = dark ? '切换到浅色模式' : '切换到深色模式';
+    btn.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
+    syncThemeColor(dark);
   }
   syncIcon();
 
@@ -891,16 +907,34 @@ function initNavToggle() {
   var menu = $('navMenu');
   if (!btn || !menu) return;
 
+  /* 同步按钮图标与无障碍状态：屏幕阅读器靠 aria-expanded 判断菜单开合 */
+  function syncNav() {
+    var open = menu.classList.contains('open');
+    btn.innerHTML = open ? ICON_CLOSE : ICON_MENU;
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? '收起菜单' : '打开菜单');
+  }
+  syncNav();
+
   btn.addEventListener('click', function () {
     menu.classList.toggle('open');
-    btn.textContent = menu.classList.contains('open') ? '✕' : '☰';
+    syncNav();
   });
 
   // 点击菜单项后自动收起
   menu.addEventListener('click', function (e) {
     if (e.target.closest('a')) {
       menu.classList.remove('open');
-      btn.textContent = '☰';
+      syncNav();
+    }
+  });
+
+  // 按 Esc 也收起菜单（键盘用户）
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && menu.classList.contains('open')) {
+      menu.classList.remove('open');
+      syncNav();
+      btn.focus();
     }
   });
 }
