@@ -7,6 +7,53 @@
    ========================================================================== */
 
 (function () {
+  /* 阅读进度条：页面顶部 2px 蓝色条，跟随滚动同步 */
+  function initReadingProgress() {
+    var bar = document.createElement('div');
+    bar.className = 'reading-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        bar.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + '%';
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
+  /* 文章目录：扫描正文 h2 自动生成，宽屏吸顶在右侧空白区，滚动时高亮当前小节 */
+  function initArticleToc() {
+    var toc = $('articleToc');
+    var heads = document.querySelectorAll('.article-content h2');
+    if (!toc || heads.length < 2) { if (toc) toc.remove(); return; }
+    toc.innerHTML = Array.prototype.map.call(heads, function (h, i) {
+      h.id = 'sec-' + i;
+      return '<a href="#sec-' + i + '">' + h.textContent + '</a>';
+    }).join('');
+    /* 平滑滚动到小节（带 header 偏移） */
+    toc.addEventListener('click', function (e) {
+      var a = e.target.closest('a');
+      if (!a) return;
+      e.preventDefault();
+      var target = document.querySelector(a.getAttribute('href'));
+      if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+    });
+    var links = toc.querySelectorAll('a');
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        links.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      });
+    }, { rootMargin: '-15% 0px -70% 0px' });
+    heads.forEach(function (h) { obs.observe(h); });
+  }
+
   var root = $('articleRoot');
 
   // 1. 取出 URL 上的 id，并找到对应文章
@@ -137,7 +184,7 @@
     + '</form>'
     + '<ul class="comment-list" id="commentList"></ul>'
     + '<div class="empty-state comment-empty" id="commentEmpty">'
-    +   '<div class="empty-icon">💬</div><p>还没有评论，来抢沙发吧。</p>'
+    +   '<div class="empty-icon">💬</div><p>还没有评论，写第一条吧。</p>'
     + '</div>'
     + '</section>';
 
@@ -162,6 +209,9 @@
     + '<img class="article-hero" src="' + article.cover + '" alt="' + escapeHtml(article.title)
     +   '" onerror="this.onerror=null;this.src=imgFallback(\'文章封面\')">'
 
+    // 右侧目录（宽屏显示，JS 根据正文 h2 自动生成）
+    + '<div class="toc-rail"><nav class="toc" id="articleToc" aria-label="文章目录"></nav></div>'
+
     // 正文
     + '<article class="article-content" id="articleContent">'
     +   renderArticleContent(article.content)
@@ -184,6 +234,9 @@
     +   '<h2>相关推荐</h2>'
     +   '<div class="card-grid">' + relatedHtml + '</div>'
     + '</section>';
+
+  initReadingProgress();
+  initArticleToc();
 
   /* ---------------- 评论渲染与发表 ---------------- */
   var listEl = $('commentList');
@@ -326,7 +379,7 @@
     var type = item.getAttribute('data-share');
 
     if (type === 'copy') {
-      copyText(pageUrl(), function () { showToast('链接已复制，快去分享吧'); },
+      copyText(pageUrl(), function () { showToast('链接已复制'); },
         function () { showToast('复制失败，请手动复制地址栏链接'); });
     } else if (type === 'wechat') {
       copyText(pageUrl(), function () { showToast('链接已复制，去微信粘贴给好友吧'); },
