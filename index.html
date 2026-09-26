@@ -31,7 +31,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="css/style.css?v=20260919b">
+  <link rel="stylesheet" href="css/style.css?v=20260926e">
 
   <!-- Google Analytics 访问统计：免费，可看实时在线、城市、设备、来源（衡量ID：G-126PKG1057） -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-126PKG1057"></script>
@@ -64,6 +64,7 @@
         <a class="nav-link" href="rate.html">评分</a>
         <a class="nav-link" href="devices.html">设备清单</a>
         <a class="nav-link" href="about.html">关于我</a>
+        <a class="nav-link" href="now.html">现在</a>
         <a class="nav-link" href="submit.html">投稿/反馈</a>
       </nav>
 
@@ -91,7 +92,7 @@
         <h2>最新文章</h2>
         <a class="more-link" href="articles.html">查看全部 →</a>
       </div>
-      <div class="card-grid" id="latestGrid"><!-- home.js 渲染 --></div>
+      <div class="card-grid" id="latestGrid"><!-- 骨架屏占位，home.js 渲染后自动替换 --><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="width:90%;height:16px"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="width:80%;height:16px"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="width:85%;height:16px"></div><div class="skeleton skeleton-line"></div></div></div></div>
     </section>
 
     <!-- ============================ 热门推荐 ============================ -->
@@ -100,7 +101,7 @@
         <h2>热门推荐</h2>
         <a class="more-link" href="articles.html">更多好文 →</a>
       </div>
-      <div class="card-grid cols-4" id="hotGrid"><!-- home.js 渲染 --></div>
+      <div class="card-grid cols-4" id="hotGrid"><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div></div>
     </section>
 
     <!-- ============================ 近期开箱 ============================ -->
@@ -109,7 +110,7 @@
         <h2>近期开箱</h2>
         <a class="more-link" href="articles.html">全部开箱 →</a>
       </div>
-      <div class="card-grid cols-4" id="unboxingGrid"><!-- home.js 渲染 --></div>
+      <div class="card-grid cols-4" id="unboxingGrid"><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div><div class="skeleton-card"><div class="skeleton sk-img"></div><div class="sk-body"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div></div></div>
     </section>
 
   </main>
@@ -125,6 +126,7 @@
         <div class="footer-col">
           <h4>内容</h4>
           <a href="articles.html">全部文章</a>
+          <a href="bits.html">碎片</a>
           <a href="devices.html">设备清单</a>
           <a href="about.html">关于我</a>
         </div>
@@ -144,7 +146,7 @@
 
   <!-- 顺序：先加载数据，再加载公共脚本，最后加载本页脚本 -->
   <script src="js/data.js"></script>
-  <script src="js/common.js?v=20260919b"></script>
-  <script src="js/home.js"></script>
+  <script src="js/common.js?v=20260926e"></script>
+  <script src="js/home.js?v=20260926e"></script>
 </body>
 </html>
