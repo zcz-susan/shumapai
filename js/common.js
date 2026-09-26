@@ -25,6 +25,13 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+/* '2026-09-05' → '2026.09.05'：列表卡片用的短格式，配合等宽数字更整齐 */
+function formatDateShort(d) {
+  var parts = String(d).split('-');
+  if (parts.length === 3) return parts.join('.');
+  return formatDate(d);
+}
+
 /* '2026-09-05' → '2026年9月5日'；'2026-08' → '2026年8月' */
 function formatDate(d) {
   var parts = String(d).split('-');
@@ -777,7 +784,7 @@ function initLikeAction() {
       } else if (!liked) {
         showToast('云端取消失败，已在本机取消');
       } else {
-        showToast('云端同步失败，点赞暂存本机');
+        showToast('已在本机记录（同步失败）');
       }
     });
   });
@@ -809,7 +816,7 @@ function articleCardHtml(a) {
     +     '<h3 class="card-title"><a href="article.html?id=' + a.id + '">' + escapeHtml(a.title) + '</a></h3>'
     +     '<p class="card-excerpt">' + escapeHtml(a.excerpt) + '</p>'
     +     '<div class="card-meta">'
-    +       '<span class="card-date">' + formatDate(a.date) + '</span>'
+    +       '<span class="card-date">' + formatDateShort(a.date) + '</span>'
     +       '<span class="card-stats">'
     +         '<span class="stat-comments" title="评论数">💬 ' + getComments(a.id).length + '</span>'
     +         '<button type="button" class="like-btn' + (isArticleLiked(a.id) ? ' is-liked' : '')
@@ -1095,11 +1102,94 @@ function initRevealOnScroll() {
   });
 }
 
+/* ------------------- 九、导航栏滚动加深 ------------------------------- */
+/* 页面在顶部时导航保持通透毛玻璃；一旦向下滚动，加深底色并加投影，
+   让导航从内容上方"压"住层次。rAF 节流，避免滚动事件里频繁读写样式。 */
+function initHeaderScroll() {
+  var header = document.querySelector('.site-header');
+  if (!header) return;
+  var ticking = false;
+  function update() {
+    header.classList.toggle('scrolled', window.scrollY > 12);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update(); // 初始状态（例如刷新时页面已在中部）
+}
+
+/* ------------------- 十、中英文自动间距 ------------------------------- */
+/* 中文与英文/数字相邻时自动插入窄空格（\u2009），中西文混排更透气。
+   幂等：已插入空格后再次运行不会重复（正则不匹配已有间隔）。 */
+function autoSpaceText(root) {
+  var reCjkFirst = /([一-龥])([A-Za-z0-9@#$%&])/g;
+  var reCjkLast = /([A-Za-z0-9%])([一-龥])/g;
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  var nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function (n) {
+    var p = n.parentNode;
+    if (!p || p.closest('code, pre, script, style, textarea, input')) return;
+    var t = n.nodeValue;
+    var next = t.replace(reCjkFirst, '$1 $2').replace(reCjkLast, '$1 $2');
+    if (next !== t) n.nodeValue = next;
+  });
+}
+
+/* ------------------- 十一、图片加载淡入 ------------------------------- */
+/* CSS 里 html.js img 默认透明，这里给加载完成的图片补 is-loaded 触发淡入；
+   MutationObserver 兜底后续动态插入的图片（评论、异步渲染等）。 */
+function markImgLoaded(img) {
+  if (img.complete && img.naturalWidth > 0) { img.classList.add('is-loaded'); return; }
+  img.addEventListener('load', function () { img.classList.add('is-loaded'); }, { once: true });
+  img.addEventListener('error', function () { img.classList.add('is-loaded'); }, { once: true });
+}
+function initImgFade() {
+  document.querySelectorAll('img').forEach(markImgLoaded);
+  new MutationObserver(function (records) {
+    records.forEach(function (r) {
+      r.addedNodes.forEach(function (node) {
+        if (node.nodeType !== 1) return;
+        if (node.tagName === 'IMG') markImgLoaded(node);
+        else node.querySelectorAll && node.querySelectorAll('img').forEach(markImgLoaded);
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
+}
+
+/* ------------------- 十二、返回顶部 ----------------------------------- */
+function initToTop() {
+  var btn = document.createElement('button');
+  btn.className = 'to-top';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', '返回顶部');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  document.body.appendChild(btn);
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      btn.classList.toggle('show', window.scrollY > window.innerHeight);
+      ticking = false;
+    });
+  }, { passive: true });
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
 /* ----------------------------- 初始化 -------------------------------- */
 document.addEventListener('DOMContentLoaded', function () {
   initThemeToggle();
   initNavToggle();
+  initHeaderScroll();
   initNavSearch();
+  initImgFade();
+  initToTop();
+  /* 各页面渲染脚本同在 DOMContentLoaded 执行，延迟一拍确保动态内容也被处理 */
+  setTimeout(function () { autoSpaceText(document.body); }, 400);
   initCardClick();
   initLikeAction();
   initLoginUI();  // 注入导航登录入口 + 会话静默续期
