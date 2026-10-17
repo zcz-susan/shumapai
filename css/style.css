@@ -110,7 +110,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 /* 页面标题区 */
-.page-head { padding: 44px 0 28px; }
+.page-head { padding: 52px 0 32px; } /* 顶部留白加大，页面开场更透气 */
 /* 页面大标题用衬线：中文衬线（宋体系）是个人博客最直接的"高级感开关"；clamp 弹性字号 + 0.5px 正字距 */
 .page-head h1 { font-family: var(--font-serif); font-size: clamp(26px, 4vw, 36px); font-weight: 600; letter-spacing: 0.5px; color: var(--text); }
 .page-head p { color: var(--text-2); margin-top: 10px; font-size: 16px; }
@@ -158,13 +158,13 @@ html[data-theme="dark"] .site-header.scrolled {
 .nav-menu { display: flex; align-items: center; gap: 2px; margin-left: auto; flex-shrink: 0; }
 .nav-link { padding: 8px 16px; border-radius: 9px; border: 1px solid transparent; color: var(--text-2); font-size: 15px; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
 .nav-link:hover { color: var(--text); background: var(--bg); }
-/* 选中项：不用实心色块，改细边框 + 微弱发光，轻盈不厚重 */
+/* 选中项：苹果式纯文字弱化——不用色块/边框/发光，只靠加深字色 + 加重字重区分当前页 */
 .nav-link.active {
-  color: var(--c-primary-strong);
+  color: var(--text);
   background: transparent;
-  border-color: var(--c-primary-strong);
+  border-color: transparent;
   font-weight: 600;
-  box-shadow: 0 0 10px rgba(88, 124, 178, 0.22), inset 0 0 6px rgba(88, 124, 178, 0.08);
+  box-shadow: none;
 }
 
 /* 搜索框：直接挂在导航栏上（已移出折叠菜单），间距由 .nav-bar 的 gap 控制。
@@ -215,7 +215,8 @@ html[data-theme="dark"] .site-header.scrolled {
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   height: 42px; padding: 0 24px;
-  border: 1px solid var(--border-strong); border-radius: 11px;
+  /* 胶囊形按钮（980px 圆角 = 全圆）：与点赞/标签的胶囊形统一，苹果式圆润 */
+  border: 1px solid var(--border-strong); border-radius: 980px;
   background: var(--card); color: var(--text);
   font-size: 15px; font-weight: 500; cursor: pointer;
   transition: all 0.2s;
@@ -237,7 +238,7 @@ html[data-theme="dark"] .site-header.scrolled {
 }
 a.tag:hover { background: var(--c-primary-strong); color: #fff; }
 
-.section { margin-top: 68px; } /* 区块间距整体 +8px，留白更透气 */
+.section { margin-top: 76px; } /* 区块间距再 +8px，向苹果式大留白靠拢 */
 .section-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 24px;
